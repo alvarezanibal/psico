@@ -1,0 +1,6 @@
+:root { font-synthesis: none; text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+body { margin: 0; min-width: 320px; }
+a { -webkit-tap-highlight-color: transparent; }
+button, input, select, textarea { font: inherit; }
+::selection { background: #2563eb30; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; scroll-behavior: auto !important; } }
