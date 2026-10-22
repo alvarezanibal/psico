@@ -1,5 +1,8 @@
 # Consultorio
 
+Aplicación publicada: https://alvarezanibal.github.io/psico/
+Repositorio: https://github.com/alvarezanibal/psico
+
 Aplicación privada para una psicóloga: pacientes, agenda local, sesiones, deudas y pagos parciales o agrupados. Interfaz en español argentino con temas claro y oscuro. Google Calendar y facturación ARCA quedan para las siguientes etapas.
 
 ## Desarrollo local
@@ -56,7 +59,7 @@ pnpm build
 
 Por pedido del usuario, **no se escribieron ni ejecutaron tests**. El build incluye la comprobación de TypeScript. No hay framework, scripts ni dependencias de testing.
 
-El código de las fases 1–2 está implementado. El usuario creó su proyecto Supabase y configuró `.env.local`. La actualización de acceso debe aplicarse manualmente en ese proyecto; las políticas RLS y transacciones no se verificaron desde este entorno. Tampoco se verificaron en vivo recuperación, backup/restauración ni flujos de cobro. No se publicó el sitio.
+El código de las fases 1–2 está implementado. El usuario creó su proyecto Supabase y configuró `.env.local`. La actualización de acceso debe aplicarse manualmente en ese proyecto; las políticas RLS y transacciones no se verificaron desde este entorno. Tampoco se verificaron en vivo recuperación, backup/restauración ni flujos de cobro. El sitio está publicado en GitHub Pages.
 
 Antes de usar datos reales, completá la configuración y las verificaciones de acceso, dinero y recuperación pendientes. Los criterios de aceptación que dependen de Supabase permanecen pendientes; compilar el frontend no los acredita.
 

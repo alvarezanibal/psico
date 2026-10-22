@@ -1,5 +1,8 @@
 # Configuración y operación
 
+Publicación actual: https://alvarezanibal.github.io/psico/
+Repositorio: https://github.com/alvarezanibal/psico
+
 ## Supabase y acceso
 
 Aplicá ambas migraciones en orden y habilitá la única cuenta siguiendo README.md. Si ya aplicaste la inicial, ejecutá solo `202610220001_password_only_access.sql` para permitir el ingreso sin TOTP. Solo `public` debe exponerse mediante Data API para la aplicación; mantené `private` fuera de la API. Deshabilitá signup y configurá la contraseña mínima de la cuenta en 12 caracteres o más. No crees pacientes hasta terminar el aprovisionamiento.
@@ -8,7 +11,7 @@ En Authentication → URL Configuration configurá:
 
 - Desarrollo: Site URL `http://localhost:5173`; Redirect URLs `http://localhost:5173/` y `http://localhost:5173/?recovery=1`.
 - Si elegís `127.0.0.1`, usá ese origen en todos los pasos y agregá sus dos URLs equivalentes.
-- Producción: Site URL `https://USUARIO.github.io/REPOSITORIO/`; Redirect URLs de esa raíz y `https://USUARIO.github.io/REPOSITORIO/?recovery=1`.
+- Producción: Site URL `https://alvarezanibal.github.io/psico/`; Redirect URLs de esa raíz y `https://alvarezanibal.github.io/psico/?recovery=1`.
 
 Las URLs de recuperación apuntan a la raíz estática, sin fragmento de router. El SDK intercambia el código PKCE y luego abre las rutas `#/`. Solicitá y abrí la recuperación en el mismo navegador. Configurá un proveedor de correo propio y comprobá la entrega antes de depender de este flujo en producción.
 
@@ -54,4 +57,4 @@ Ensayar la restauración con datos sintéticos y contrastar pacientes, sesiones,
 
 ## Estado de entrega
 
-Código y configuración preparados localmente. Pendiente: aprovisionar Supabase, aplicar SQL, comprobar acceso y flujos reales, ejecutar recuperación/restauración y publicar cuando corresponda. Google Calendar, ARCA, PDFs y sus secretos no están habilitados.
+Aplicación publicada en GitHub Pages el 22/10/2026. El workflow finalizó correctamente y la web y su archivo JavaScript respondieron HTTP 200. Pendiente: confirmar la configuración de Supabase, comprobar acceso y flujos reales, ejecutar recuperación/restauración. Google Calendar, ARCA, PDFs y sus secretos no están habilitados.

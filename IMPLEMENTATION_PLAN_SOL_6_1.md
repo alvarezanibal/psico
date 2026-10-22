@@ -2,7 +2,7 @@
 
 Read this plan with [SPEC.md](SPEC.md), version 1.3. The spec defines the product; this plan defines the implementation order, proposed defaults, and a deliberately small verification budget. The intended implementer is Sol 6.1.
 
-Reviewed 21 October 2026 and updated with the user's scope clarification. Development of the first release has started; see the progress record before continuing. No Git repository has been initialized.
+Reviewed 21 October 2026 and updated with the user's scope clarification. Development of the first release has started; see the progress record before continuing. The local Git repository tracks https://github.com/alvarezanibal/psico.git on main.
 
 **Current user instruction (21 October 2026): do not create or run tests yet.** This overrides the testing steps below for the current development stage. Use type checks and production builds; keep live functional/security/database verification explicitly pending. Do not install test frameworks or generate test scaffolding.
 
@@ -162,11 +162,13 @@ For the first release, use only the money and access suites (roughly 8–10 scen
 
 ## 12. Progress record
 
+- Publication (22 October 2026): pushed main to the public repository https://github.com/alvarezanibal/psico using the existing Git Credential Manager account. Configured public Supabase build variables and /psico/ base path, enabled Pages and completed Deploy Consultorio successfully. Verified HTTP 200 for https://alvarezanibal.github.io/psico/ and its JavaScript asset. Local credentials, dependencies and build files are excluded from Git.
+
 - Phase 1 code: React/Vite/MUI project, responsive navigation, light/dark themes, setup screen, private login/logout, recovery callback, owner authorization helpers (TOTP removed on 22 October at user request), public env example, and manual GitHub Pages workflow.
 - Phase 2 code: patient CRUD/archive/detail, manual appointments and day/week/month calendar, overlap warning, session filters/completion, dashboard, debtor accounts, partial/grouped payments, audited reversal, exact-cent allocation, server balances, transaction locks and idempotency. Fiscal features remain deferred.
 - Database: initial versioned SQL includes ownership/FKs, RLS/grants, invoker views, monetary/date constraints, optimistic session editing and transactional RPCs. Migration has NOT been applied to a live database.
 - Documentation: README plus architecture, database and deployment/recovery/backup instructions. Environment values and the one authorized user must be configured manually.
 - Checks: frontend TypeScript/production compilation passed during development. No tests were created or executed, per user instruction. No test dependencies or scripts were added.
 - Latest setup: the user created a Supabase project and configured `.env.local`; the variable prefixes were corrected to `VITE_`. Added `202610220001_password_only_access.sql` to allow password-only access while retaining the single owner and RLS.
-- Blockers: the access update must be applied manually in the Supabase SQL Editor. No Supabase CLI, psql or Docker available here. Recovery, RLS, transactions, hosted callbacks and backup/restore remain unverified from this environment. No site was published. No tests were created or run.
-- Next: apply the new access migration in Supabase SQL Editor and reload the app. Revisit the proposed defaults as needed; Google Calendar and ARCA come afterward.
+- Blockers: the access update must be applied manually in the Supabase SQL Editor. No Supabase CLI, psql or Docker available here. Recovery, RLS, transactions, hosted callbacks and backup/restore remain unverified from this environment. The site is now published on GitHub Pages; live authentication/recovery still requires production URL configuration in Supabase. No tests were created or run.
+- Next: configure Supabase Authentication with the published site and recovery redirect URLs, then use the deployed app. Google Calendar and ARCA come afterward. No tests were created or run.
