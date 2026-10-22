@@ -3,7 +3,7 @@
 Aplicación publicada: https://alvarezanibal.github.io/psico/
 Repositorio: https://github.com/alvarezanibal/psico
 
-Aplicación privada para una psicóloga: pacientes, agenda local, sesiones, deudas y pagos parciales o agrupados. Interfaz en español argentino con temas claro y oscuro. Google Calendar y facturación ARCA quedan para las siguientes etapas.
+Aplicación de consultorio con cuentas profesionales y un administrador de accesos: pacientes, agenda local, sesiones, deudas y pagos parciales o agrupados. Interfaz en español argentino con temas claro y oscuro. Google Calendar y facturación ARCA quedan para las siguientes etapas.
 
 ## Desarrollo local
 
@@ -37,7 +37,9 @@ commit;
 4. Configurá las URLs de acceso/recuperación según [docs/deployment.md](docs/deployment.md). En local usá siempre el mismo origen (`localhost` o `127.0.0.1`).
 5. Ingresá con el email y contraseña de la cuenta creada. La segunda migración permite ese acceso manteniendo la autorización de la única propietaria y las políticas RLS. Si aparece “Actualizá el acceso”, falta aplicar esa migración.
 
-La aplicación no ofrece registro público, administración de usuarios ni perfiles clínicos.
+La aplicación no ofrece registro público ni perfiles clínicos. El administrador crea y gestiona cuentas desde un panel separado. Cada profesional conserva sus propios datos.
+
+Para activar el administrador aplicá la tercera migración, desplegá la función admin-users y creá la cuenta inicial siguiendo [docs/admin-users.md](docs/admin-users.md). No hace falta correo personal para las cuentas nuevas.
 
 ## Funciones incluidas
 
@@ -57,7 +59,7 @@ pnpm typecheck
 pnpm build
 ```
 
-Por pedido del usuario, **no se escribieron ni ejecutaron tests**. El build incluye la comprobación de TypeScript. No hay framework, scripts ni dependencias de testing.
+Por pedido del usuario, **no se escribieron ni ejecutaron tests**. El build incluye la comprobación de TypeScript del frontend y de la función administrativa. No hay framework, scripts ni dependencias de testing.
 
 El código de las fases 1–2 está implementado. El usuario creó su proyecto Supabase y configuró `.env.local`. La actualización de acceso debe aplicarse manualmente en ese proyecto; las políticas RLS y transacciones no se verificaron desde este entorno. Tampoco se verificaron en vivo recuperación, backup/restauración ni flujos de cobro. El sitio está publicado en GitHub Pages.
 
@@ -65,6 +67,7 @@ Antes de usar datos reales, completá la configuración y las verificaciones de 
 
 ## Documentación
 
+- [Administrador y usuarios sin correo](docs/admin-users.md)
 - [Arquitectura](docs/architecture.md)
 - [Base de datos y reglas de dinero](docs/database.md)
 - [Despliegue, recuperación y backups](docs/deployment.md)

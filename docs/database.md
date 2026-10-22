@@ -35,3 +35,7 @@ No se permiten anticipos, crédito a favor, devolución de efectivo ni borrar mo
 La identidad y la autorización de la única propietaria se comprueban en SQL, además de la UI. Por pedido del usuario, el segundo factor no es obligatorio actualmente. `authenticated` solo tiene SELECT sobre movimientos; las escrituras pasan por las funciones. Los helpers privilegiados tienen `search_path` fijo, permisos explícitos y consultas limitadas al dueño autenticado. Las relaciones usan claves compuestas para impedir cruces entre propietarios/pacientes. El esquema privado no debe agregarse a los esquemas expuestos por Data API.
 
 Pendiente: aplicar la migración y verificar políticas, concurrencia e importes en una base real. No se escribieron ni ejecutaron tests en esta etapa.
+
+## Extensión de usuarios
+
+202610220002_admin_users.sql incorpora private.app_accounts y private.account_audit, preserva la cuenta original y redefine los helpers de acceso. Los profesionales activos mantienen aislamiento por owner_id; el administrador no pasa has_app_access. Las RPCs admin_* solo admiten service_role y verifican al administrador actor. La función admin-users verifica la sesión y el rol antes de usar esas RPCs. El bloqueo no elimina cuentas ni registros financieros. Ver docs/admin-users.md.

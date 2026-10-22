@@ -28,3 +28,7 @@ Las colecciones se descargan por páginas de 500 registros, evitando el límite 
 Google Calendar se incorpora después de que la agenda local sea utilizable. Borradores fiscales, ARCA y PDF autorizado vienen después, manteniendo los cobros independientes. No hay datos fiscales obligatorios, tablas de facturas ni autorizaciones simuladas en esta entrega.
 
 No se ejecutaron pruebas funcionales ni de base de datos por instrucción del usuario. La compilación comprueba el frontend; no demuestra las garantías de las políticas/transacciones hasta verificarlas en Supabase.
+
+## Administración de cuentas
+
+La extensión de usuarios reemplaza la autorización de una única propietaria por cuentas privadas con dos roles. has_app_access exige profesional activo y conserva owner_id; el administrador solo consulta su perfil y las operaciones de cuentas del backend. AuthGate consulta current_app_account y retira el acceso al detectar bloqueos. Las cuentas nuevas usan un alias interno de Auth, con usuario y contraseña en la UI. Ver docs/admin-users.md para los detalles y activación.

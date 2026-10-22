@@ -1,13 +1,13 @@
 # SPEC.md — Gestión de Consultorio Psicológico
 
-**Versión:** 1.3
+**Versión:** 1.4
 **Estado:** Especificación para implementación  
 **Idioma:** Español (Argentina)  
-**Alcance inicial:** Una única psicóloga, uso personal y privado, gestión de deudas y planificación diaria, despliegue económico. Facturación ARCA en una etapa posterior.
+**Alcance actual:** Usuarios profesionales con datos separados y un administrador dedicado a crear y habilitar/bloquear cuentas. Acceso por usuario y contraseña, sin correo para las cuentas nuevas. Facturación ARCA en una etapa posterior.
 
 ## 1. Objetivo
 
-Construir una herramienta de uso diario para una única psicóloga. Su propósito principal es reducir el trabajo administrativo para saber quién debe, cuánto debe y cómo está organizada su agenda.
+Construir una herramienta de uso diario para profesionales de psicología, con cuentas separadas y un administrador de accesos. Su propósito principal es reducir el trabajo administrativo para saber quién debe, cuánto debe y cómo está organizada su agenda.
 
 **Primera entrega utilizable:**
 
@@ -37,7 +37,7 @@ La aplicación debe ser **simple, agradable, segura, responsive y de bajo costo*
 | Navegación | React Router o TanStack Router | Resolver recargas de rutas en GitHub Pages |
 | Backend | Supabase Edge Functions | Integraciones privadas y lógica privilegiada |
 | Base de datos | Supabase PostgreSQL | Migraciones, constraints y RLS |
-| Acceso | Supabase Auth con email y contraseña | Una cuenta autorizada; sin registro público; TOTP diferido |
+| Acceso | Supabase Auth con usuario y contraseña | Admin y profesionales; sin registro público ni correo para cuentas nuevas; TOTP diferido |
 | Archivos | Supabase Storage privado, si hace falta | PDF, nunca almacenamiento público de datos fiscales |
 | Deploy | GitHub Actions + GitHub Pages | Solo assets estáticos, sin secretos |
 | Calendario | Google Calendar API | Integración posterior a la agenda local; OAuth 2.0, solo lectura |
@@ -47,18 +47,21 @@ La aplicación debe ser **simple, agradable, segura, responsive y de bajo costo*
 
 Supabase Edge Functions es la opción preferida. Si la firma CMS/PKCS#7 o la integración SOAP requerida por ARCA no son viables allí de modo confiable, documentar la limitación y utilizar un componente serverless externo mínimo para esa integración, sin montar un backend permanente innecesario.
 
-## 3. Usuario y autenticación
+## 3. Usuarios y autenticación
 
-- Un único usuario autorizado (la profesional), creado manualmente; deshabilitar registro público.
-- Login, logout y recuperación de acceso con email y contraseña. Por pedido del usuario del 22/10/2026, TOTP queda diferido y no debe bloquear el ingreso.
-- Todas las rutas privadas protegidas y **todos los accesos a datos validados en servidor**.
-- RLS obligatoria en tablas expuestas; políticas de propiedad basadas en `auth.uid()`.
-- Usar `owner_id` para las políticas de acceso y la integridad de datos. No construir gestión de múltiples profesionales, organizaciones, roles, invitaciones ni paneles de administración de usuarios; no son parte del alcance actual.
-- No exponer `service_role` en el frontend. Las Edge Functions deben verificar identidad y autorización incluso si reciben un JWT válido.
+- Dos roles: administrador de cuentas y usuario profesional. El administrador solo crea usuarios, restablece contraseñas y habilita/bloquea accesos.
+- Los profesionales gestionan sus propios pacientes, sesiones y cobros. El administrador no accede a esos datos.
+- Las cuentas nuevas usan nombre de usuario y contraseña, sin correo personal, confirmación por mail ni invitaciones. Supabase Auth mantiene identificadores técnicos internos.
+- La cuenta original conserva sus datos y su ingreso anterior hasta que el administrador configure su acceso por usuario.
+- Login/logout y recuperación de cuentas nuevas a través del administrador. TOTP continúa diferido por pedido del usuario.
+- Deshabilitar registro público. El alta administrativa se ejecuta exclusivamente en backend con entradas validadas e identidad/rol comprobados en servidor.
+- RLS obligatoria por owner_id y cuenta profesional activa. Bloquear el acceso debe impedir lecturas/escrituras incluso con una sesión anterior todavía válida.
+- Los usuarios no pueden asignarse roles ni habilitarse. Las credenciales privilegiadas nunca llegan al frontend.
+- Mantener solo estos dos roles; no agregar organizaciones, roles configurables ni gestión fiscal al panel del administrador.
 
 ## 4. Navegación
 
-Menú lateral:
+El administrador solo tiene el menú **Usuarios**. Para los profesionales, el menú lateral es:
 
 1. **Inicio** — resumen del día y deudas.
 2. **Calendario** — eventos y sesiones.
@@ -229,10 +232,10 @@ Requisitos de modelado:
 
 **Obligatorio antes del deploy real:**
 
-Aplicar estos controles a las funciones incluidas en cada entrega. Los controles de Google, certificados ARCA y PDFs se exigen cuando esas funciones se habiliten; no bloquean el uso real de la agenda y las cuentas corrientes. Mantener autenticación, autorización de la única cuenta, RLS, respaldo y protección de datos desde la primera entrega. MFA queda diferido por pedido del usuario.
+Aplicar estos controles a las funciones incluidas en cada entrega. Los controles de Google, certificados ARCA y PDFs se exigen cuando esas funciones se habiliten; no bloquean el uso real de la agenda y las cuentas corrientes. Mantener autenticación, autorización de las cuentas y separación por propietario, RLS, respaldo y protección de datos desde la primera entrega. MFA queda diferido por pedido del usuario.
 
 1. RLS en todas las tablas privadas, con pruebas negativas de acceso cruzado.
-2. Auth con email/contraseña y autorización de la única cuenta; deshabilitar sign-up público. No exigir MFA por ahora.
+2. Auth con usuario/contraseña y autorización por rol/cuenta activa; deshabilitar sign-up público. No exigir MFA por ahora.
 3. Autorización en Edge Functions y validación Zod de entradas de usuario.
 4. Secrets y certificados fuera del repo/frontend. Nunca subir `.env` real.
 5. Cifrado/gestión segura de refresh tokens de Google y claves ARCA, con rotación/revocación.
@@ -263,10 +266,10 @@ Permitir alternar entre temas y recordar la preferencia. Usar tarjetas, tablas l
 
 ## 9. Fases sugeridas
 
-**Orden de entrega confirmado:** fases 1–2 forman la primera aplicación útil para una única psicóloga: pacientes, deudas, cobros y planificación local. Luego se incorpora Google Calendar; facturación ARCA viene después. Aplicar la calidad y documentación pertinentes de la fase 6 antes de cada entrega, incluida la primera; no esperar a ARCA para poder usar la aplicación.
+**Orden de entrega confirmado:** fases 1–2 forman la primera aplicación útil para cada profesional: pacientes, deudas, cobros y planificación local. Luego se incorpora Google Calendar; facturación ARCA viene después. Aplicar la calidad y documentación pertinentes de la fase 6 antes de cada entrega, incluida la primera; no esperar a ARCA para poder usar la aplicación.
 
 ### Fase 1 — Fundación
-- Crear proyecto React/Vite, layout, temas, Supabase, migraciones, Auth con email/contraseña y RLS.
+- Crear proyecto React/Vite, layout, temas, Supabase, migraciones, Auth con usuario/contraseña, roles simples y RLS.
 - Configurar despliegue GitHub Pages, base URL y rutas SPA.
 
 ### Fase 2 — Gestión central
@@ -290,7 +293,8 @@ Permitir alternar entre temas y recordar la preferencia. Usar tarjetas, tablas l
 
 Los criterios de Google y facturación corresponden a sus etapas posteriores. La primera entrega se acepta por sus funciones de pacientes, agenda local, deudas, cobros y seguridad, sin exigir esas integraciones.
 
-- [ ] Solo la cuenta autorizada puede iniciar sesión y leer/escribir datos.
+- [ ] Solo las cuentas habilitadas pueden acceder; cada profesional lee/escribe sus propios datos.
+- [ ] El administrador puede crear usuarios sin correo, restablecer contraseñas y bloquear/reactivar accesos, sin consultar pacientes ni cobros.
 - [ ] Una persona ajena no puede consultar datos por ID ni invocar Edge Functions privilegiadas.
 - [ ] Se pueden crear, editar, buscar y archivar pacientes.
 - [ ] Se pueden agendar, consultar y reprogramar turnos en vistas de día, semana y mes sin conectar Google ni configurar ARCA.
@@ -332,7 +336,7 @@ Entregar el código, pruebas breves y documentación correspondientes a cada eta
 
 **Instrucción vigente del usuario (21/10/2026): no crear ni ejecutar tests todavía.** Durante el desarrollo actual, usar chequeos de tipos y compilación. Las pruebas y verificaciones funcionales/de seguridad que requieren un entorno real quedan pendientes; no presentarlas como aprobadas por haber compilado.
 
-Seguí `IMPLEMENTATION_PLAN_SOL_6_1.md`. Implementá este proyecto **por fases**, dejando una aplicación ejecutable al final de cada fase. Diseñá para una única psicóloga y priorizá deudas, cobros y planificación diaria; agregá facturación después. Priorizá funcionalidad real, simplicidad, mantenibilidad, seguridad y costos bajos. No generes pantallas estáticas como sustituto de la lógica. No uses mocks en producción ni simules una autorización fiscal. No inventes requisitos fiscales.
+Seguí `IMPLEMENTATION_PLAN_SOL_6_1.md`. Implementá este proyecto **por fases**, dejando una aplicación ejecutable al final de cada fase. Diseñá para profesionales con datos separados y un administrador de cuentas; priorizá deudas, cobros y planificación diaria; agregá facturación después. Priorizá funcionalidad real, simplicidad, mantenibilidad, seguridad y costos bajos. No generes pantallas estáticas como sustituto de la lógica. No uses mocks en producción ni simules una autorización fiscal. No inventes requisitos fiscales.
 
 Tomá decisiones de ingeniería razonables y documentalas. Ejecutá tests, verificá RLS y flujos críticos, y prepará un despliegue reproducible. Si una integración requiere configuración o acceso del usuario, dejá documentados los pasos precisos y continuá con lo demás.
 

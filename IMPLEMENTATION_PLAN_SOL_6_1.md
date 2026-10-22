@@ -1,12 +1,14 @@
 # Implementation plan for Sol 6.1
 
-Read this plan with [SPEC.md](SPEC.md), version 1.3. The spec defines the product; this plan defines the implementation order, proposed defaults, and a deliberately small verification budget. The intended implementer is Sol 6.1.
+Read this plan with [SPEC.md](SPEC.md), version 1.4. The spec defines the product; this plan defines the implementation order, proposed defaults, and a deliberately small verification budget. The intended implementer is Sol 6.1.
 
 Reviewed 21 October 2026 and updated with the user's scope clarification. Development of the first release has started; see the progress record before continuing. The local Git repository tracks https://github.com/alvarezanibal/psico.git on main.
 
 **Current user instruction (21 October 2026): do not create or run tests yet.** This overrides the testing steps below for the current development stage. Use type checks and production builds; keep live functional/security/database verification explicitly pending. Do not install test frameworks or generate test scaffolding.
 
 **Access update (22 October 2026):** the user deferred TOTP. Use email/password for the single authorized owner; no authenticator enrollment gate. Apply `202610220001_password_only_access.sql` after the initial migration, preserving ownership and RLS. This supersedes earlier MFA requirements.
+
+**Scope update (22 October 2026):** add a separate account administrator who creates professional users, resets passwords and enables/disables access. New accounts use username/password with no personal email or invitations. Each professional owns isolated data; the administrator only manages accounts. This supersedes the earlier single-user/no-admin restriction. See docs/admin-users.md for activation.
 
 **Confirmed scope:** one psychologist using a private tool to make daily administration easier. The first useful release covers patient debts, payments, and planning appointments. ARCA billing comes later. Invoicing and collection remain independent.
 
@@ -17,7 +19,7 @@ Reviewed 21 October 2026 and updated with the user's scope clarification. Develo
 ## 1. Working instructions
 
 - Keep the stack in the spec. UI text: Spanish (Argentina); currency: ARS; business timezone: `America/Argentina/Buenos_Aires`.
-- Build for one authorized user. Keep `owner_id` for access control and data integrity; do not build organizations, staff roles, invitations, tenant switching, or user-management screens.
+- Support exactly two roles: account administrator and professional. Keep owner_id isolation, no organizations or configurable roles. New user creation runs through the protected admin-users backend; administrators cannot read clinical or financial data.
 - Implement in phases with working software at each boundary. Build only the phase(s) requested. If the user requests the whole project, continue through the phases without requesting routine approval between them.
 - Read only relevant files after the initial orientation. Reuse existing components and dependencies; avoid framework comparisons and speculative abstractions.
 - Persist real data in Supabase. Fixtures belong only in isolated development/test environments. Never fall back to fake production data or simulated fiscal authorization.
@@ -162,6 +164,9 @@ For the first release, use only the money and access suites (roughly 8–10 scen
 
 ## 12. Progress record
 
+- Checks for account administration: frontend/Edge Function type checking and production build passed. No tests created or run. The Supabase admin connection is not available yet, so migration, function deployment and first-admin provisioning remain pending.
+- Account administration implemented: dedicated Users panel, username/password for new accounts, enable/block and password resets. Added private role/account tables, server-only admin RPCs, an authenticated/authorized Edge Function and first-admin setup SQL. Original professional login/data are preserved. Activation requires applying 202610220002_admin_users.sql, deploying admin-users and bootstrapping the admin. No tests created or run.
+
 - Publication (22 October 2026): pushed main to the public repository https://github.com/alvarezanibal/psico using the existing Git Credential Manager account. Configured public Supabase build variables and /psico/ base path, enabled Pages and completed Deploy Consultorio successfully. Verified HTTP 200 for https://alvarezanibal.github.io/psico/ and its JavaScript asset. Local credentials, dependencies and build files are excluded from Git.
 
 - Phase 1 code: React/Vite/MUI project, responsive navigation, light/dark themes, setup screen, private login/logout, recovery callback, owner authorization helpers (TOTP removed on 22 October at user request), public env example, and manual GitHub Pages workflow.
@@ -171,4 +176,4 @@ For the first release, use only the money and access suites (roughly 8–10 scen
 - Checks: frontend TypeScript/production compilation passed during development. No tests were created or executed, per user instruction. No test dependencies or scripts were added.
 - Latest setup: the user created a Supabase project and configured `.env.local`; the variable prefixes were corrected to `VITE_`. Added `202610220001_password_only_access.sql` to allow password-only access while retaining the single owner and RLS.
 - Blockers: the access update must be applied manually in the Supabase SQL Editor. No Supabase CLI, psql or Docker available here. Recovery, RLS, transactions, hosted callbacks and backup/restore remain unverified from this environment. The site is now published on GitHub Pages; live authentication/recovery still requires production URL configuration in Supabase. No tests were created or run.
-- Next: configure Supabase Authentication with the published site and recovery redirect URLs, then use the deployed app. Google Calendar and ARCA come afterward. No tests were created or run.
+- Next: activate the administrator following docs/admin-users.md (third migration, admin-users function and bootstrap account). Existing professional access stays compatible. Google Calendar and ARCA come afterward. No tests were created or run.

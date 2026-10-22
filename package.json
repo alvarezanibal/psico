@@ -3,12 +3,14 @@
   "private": true,
   "version": "0.1.0",
   "packageManager": "pnpm@11.9.0",
-  "engines": { "node": ">=22.12.0" },
+  "engines": {
+    "node": ">=22.12.0"
+  },
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
-    "typecheck": "tsc -b",
-    "build": "tsc -b && vite build",
+    "typecheck": "tsc -b && tsc -p supabase/functions/tsconfig.json",
+    "build": "tsc -b && tsc -p supabase/functions/tsconfig.json && vite build",
     "preview": "vite preview --host 127.0.0.1"
   },
   "dependencies": {
