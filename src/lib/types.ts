@@ -15,7 +15,32 @@ export interface Patient {
   oldest_debt_at: string | null
   created_at: string
 }
+export interface AppointmentSeries {
+  created_at: string
+  id: string
+  patient_id: string
+  weekday: number
+  local_time: string
+  starts_on: string
+  ends_on: string | null
+  duration_minutes: number
+  updated_at: string
+}
+export interface ScheduleInput {
+  action: 'set' | 'stop'
+  effective_from: string
+  starts_on?: string
+  weekday?: number
+  local_time?: string
+  duration_minutes?: number
+  expected_series_id: string | null
+  expected_updated_at: string | null
+}
+export const weekdayLabels = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
 export interface PracticeSession {
+  series_id?: string | null
+  original_date?: string | null
+  virtual?: boolean
   id: string
   patient_id: string
   starts_at: string

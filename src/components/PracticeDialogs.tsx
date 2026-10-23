@@ -4,10 +4,11 @@ import { AutoFixHighRounded } from '@mui/icons-material'
 import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { usePatients, usePracticeMutation, useSessions, savePatient, saveSession, recordPayment } from '../lib/api'
+import { usePatients, usePracticeMutation, useSessions, saveSession, recordPayment, changeSchedule, useSeries } from '../lib/api'
 import { cents, dateLabel, decimal, localInput, localToday, money, safeError, toUtc } from '../lib/format'
 import { fullName, sessionLabels, type Patient, type PaymentInput, type PracticeSession } from '../lib/types'
 import { QueryState } from './common'
+import { PatientForm } from './PatientForm'
 
 type DialogState = { type: 'patient'; patient?: Patient } | { type: 'session'; session?: PracticeSession; patientId?: string; day?: string } | { type: 'payment'; patientId?: string } | null
 const DialogContext = createContext({
@@ -29,40 +30,12 @@ export function PracticeDialogs({ children }: { children: ReactNode }) {
   function saved(message: string) { setDialog(null); setMessage(message) }
   return <DialogContext.Provider value={actions}>{children}
     {dialog?.type === 'patient' && <PatientForm patient={dialog.patient} close={() => setDialog(null)} saved={() => saved(dialog.patient ? 'Paciente actualizado.' : 'Paciente agregado.')} />}
-    {dialog?.type === 'session' && <SessionForm session={dialog.session} patientId={dialog.patientId} day={dialog.day} close={() => setDialog(null)} saved={() => saved(dialog.session ? 'Sesión actualizada.' : 'Turno agendado.')} />}
+    {dialog?.type === 'session' && <SessionForm session={dialog.session} patientId={dialog.patientId} day={dialog.day} close={() => setDialog(null)} saved={() => saved(dialog.session ? 'Agenda actualizada.' : 'Turno agendado.')} />}
     {dialog?.type === 'payment' && <PaymentForm patientId={dialog.patientId} close={() => setDialog(null)} saved={() => saved('Pago registrado. Los saldos están actualizados.')} />}
     <Snackbar open={Boolean(message)} autoHideDuration={5000} onClose={() => setMessage('')} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}><Alert severity="success" onClose={() => setMessage('')} variant="filled">{message}</Alert></Snackbar>
   </DialogContext.Provider>
 }
 const moneyField = z.string().refine(value => { try { cents(value); return true } catch { return false } }, 'Ingresá un importe válido, sin separadores de miles.')
-const patientSchema = z.object({
-  first_name: z.string().trim().min(1, 'Ingresá el nombre.').max(80),
-  last_name: z.string().trim().min(1, 'Ingresá el apellido.').max(80),
-  email: z.union([z.literal(''), z.email('Revisá el email.')]),
-  phone: z.string().max(40, 'Hasta 40 caracteres.'),
-  default_session_price: moneyField,
-  default_duration_minutes: z.string().refine(v => /^\d+$/.test(v) && Number(v) >= 5 && Number(v) <= 240, 'Usá entre 5 y 240 minutos.'),
-})
-function PatientForm({ patient, close, saved }: { patient?: Patient; close: () => void; saved: () => void }) {
-  const { register, handleSubmit, formState: { errors } } = useForm({ resolver: zodResolver(patientSchema), defaultValues: {
-    first_name: patient?.first_name || '', last_name: patient?.last_name || '', email: patient?.email || '', phone: patient?.phone || '',
-    default_session_price: patient?.default_session_price || '30000', default_duration_minutes: String(patient?.default_duration_minutes || 50),
-  } })
-  const mutation = usePracticeMutation(async (values: z.infer<typeof patientSchema>) => savePatient({ ...values, default_session_price: decimal(cents(values.default_session_price)), default_duration_minutes: Number(values.default_duration_minutes) }, patient?.id))
-  const submit = handleSubmit(async values => { try { await mutation.mutateAsync(values); saved() } catch { /* Displayed in the dialog. */ } })
-  return <Dialog open onClose={mutation.isPending ? undefined : close}><Box component="form" onSubmit={submit}>
-    <DialogTitle>{patient ? 'Editar paciente' : 'Nuevo paciente'}</DialogTitle><DialogContent><Stack spacing={2.5} sx={{ pt: 1 }} >
-      {mutation.error && <Alert severity="error">{safeError(mutation.error)}</Alert>}
-      <Typography variant="body2" sx={{ color: "text.secondary" }} >Los datos necesarios para acompañar tu gestión diaria.</Typography>
-      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}><TextField label="Nombre" {...register('first_name')} error={!!errors.first_name} helperText={errors.first_name?.message} autoFocus /><TextField label="Apellido" {...register('last_name')} error={!!errors.last_name} helperText={errors.last_name?.message} /></Stack>
-      <TextField label="Email (opcional)" type="email" {...register('email')} error={!!errors.email} helperText={errors.email?.message} />
-      <TextField label="Teléfono (opcional)" type="tel" {...register('phone')} error={!!errors.phone} helperText={errors.phone?.message} />
-      <Divider /><Typography variant="body2" sx={{ fontWeight: 650 }} >Sesión habitual</Typography>
-      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}><TextField label="Honorario (ARS)" {...register('default_session_price')} error={!!errors.default_session_price} helperText={errors.default_session_price?.message || 'Sin separadores de miles.'} slotProps={{ htmlInput: { inputMode: 'decimal' } }} /><TextField label="Duración (minutos)" {...register('default_duration_minutes')} error={!!errors.default_duration_minutes} helperText={errors.default_duration_minutes?.message} slotProps={{ htmlInput: { inputMode: 'numeric' } }} /></Stack>
-      {patient && <Typography variant="caption" sx={{ color: "text.secondary" }} >Cambiar el honorario no modifica las sesiones ya registradas.</Typography>}
-    </Stack></DialogContent><DialogActions><Button onClick={close} disabled={mutation.isPending}>Cancelar</Button><Button type="submit" variant="contained" disabled={mutation.isPending}>{mutation.isPending ? 'Guardando…' : 'Guardar paciente'}</Button></DialogActions>
-  </Box></Dialog>
-}
 const sessionSchema = z.object({
   patient_id: z.uuid('Seleccioná un paciente.'),
   starts_at: z.string().min(1, 'Elegí fecha y hora.'),
@@ -73,6 +46,8 @@ const sessionSchema = z.object({
 })
 function SessionForm({ session, patientId, day, close, saved }: { session?: PracticeSession; patientId?: string; day?: string; close: () => void; saved: () => void }) {
   const patients = usePatients()
+  const series = useSeries(!!session?.series_id)
+  const [scope, setScope] = useState<'one' | 'future'>('one')
   const selected = patients.data?.find(p => p.id === (session?.patient_id || patientId))
   const { register, handleSubmit, setValue, control, formState: { errors } } = useForm({ resolver: zodResolver(sessionSchema), defaultValues: {
     patient_id: session?.patient_id || patientId || '', starts_at: session ? localInput(session.starts_at) : `${day || localToday()}T09:00`,
@@ -85,16 +60,30 @@ function SessionForm({ session, patientId, day, close, saved }: { session?: Prac
   const [validationError, setValidationError] = useState('')
   const mutation = usePracticeMutation(async (values: z.infer<typeof sessionSchema>) => {
     const starts = toUtc(values.starts_at)
-    await saveSession({ patient_id: values.patient_id, starts_at: starts, ends_at: new Date(Date.parse(starts) + Number(values.duration) * 60000).toISOString(), status: values.status, price: decimal(cents(values.price)), cancellation_fee: fee ? decimal(cents(values.cancellation_fee)) : '0.00', cancellation_reason: fee ? values.cancellation_reason : '', expected_updated_at: session?.updated_at }, session?.id)
+    if (scope === 'future' && session?.series_id && session.original_date) {
+      const firstDay = values.starts_at.slice(0, 10)
+      await changeSchedule(values.patient_id, {
+        action: 'set', effective_from: session.original_date < firstDay ? session.original_date : firstDay,
+        starts_on: firstDay, weekday: new Date(firstDay + 'T12:00:00').getDay(), local_time: values.starts_at.slice(11, 16),
+        duration_minutes: Number(values.duration), expected_series_id: session.series_id, expected_updated_at: session.updated_at,
+      })
+      return
+    }
+    await saveSession({ ...session, patient_id: values.patient_id, starts_at: starts, ends_at: new Date(Date.parse(starts) + Number(values.duration) * 60000).toISOString(), status: values.status, price: decimal(cents(values.price)), cancellation_fee: fee ? decimal(cents(values.cancellation_fee)) : '0.00', cancellation_reason: fee ? values.cancellation_reason : '', expected_updated_at: session?.updated_at }, session?.id)
   })
   const submit = handleSubmit(async values => {
     setValidationError('')
-    if (fee && cents(values.cancellation_fee) > 0 && !values.cancellation_reason.trim()) { setValidationError('Indicá el motivo del cargo de cancelación o ausencia.'); return }
+    if (scope === 'one' && fee && cents(values.cancellation_fee) > 0 && !values.cancellation_reason.trim()) { setValidationError('Indicá el motivo del cargo de cancelación o ausencia.'); return }
     try { await mutation.mutateAsync(values); saved() } catch { /* Displayed below. */ }
   })
   return <Dialog open onClose={mutation.isPending ? undefined : close}><Box component="form" onSubmit={submit}><DialogTitle>{session ? 'Editar sesión' : 'Agendar turno'}</DialogTitle><DialogContent><Stack spacing={2.5} sx={{ pt: 1 }} >
-    <QueryState loading={patients.isLoading} error={patients.error} retry={patients.refetch} />
+    <QueryState loading={patients.isLoading || scope === 'future' && series.isLoading} error={patients.error || scope === 'future' && series.error} retry={() => { void patients.refetch(); void series.refetch() }} />
     {(mutation.error || validationError) && <Alert severity="error">{validationError || safeError(mutation.error)}</Alert>}
+    {session?.series_id && <>
+      {session.virtual && session.original_date && session.original_date >= localToday() ? <TextField select label="Aplicar cambios a" value={scope} onChange={e => setScope(e.target.value as typeof scope)}><MenuItem value="one">Solo este turno</MenuItem><MenuItem value="future">Este y los siguientes</MenuItem></TextField> : <Typography variant="caption" color="text.secondary">Solo se modifica este turno. Para cambiar el horario habitual, editá el paciente.</Typography>}
+      <Typography variant="caption" color="text.secondary">{scope === 'one' ? 'Al moverlo, reemplaza al turno original de esa fecha. Los demás turnos mantienen su horario.' : 'La fecha y hora elegidas serán el primer turno del nuevo horario semanal. Se conserva el historial anterior.'}</Typography>
+      {session.original_date && dateLabel(session.starts_at, 'yyyy-MM-dd') !== session.original_date && <Typography variant="caption" color="text.secondary">Fecha original: {session.original_date.split('-').reverse().join('/')}</Typography>}
+    </>}
     <TextField label="Paciente" select {...register('patient_id', { onChange: event => {
       if (session) return
       const patient = patients.data?.find(p => p.id === event.target.value)
@@ -104,11 +93,12 @@ function SessionForm({ session, patientId, day, close, saved }: { session?: Prac
     </TextField>
     {!patients.isLoading && !patients.data?.some(p => p.active) && !session && <Alert severity="info">Agregá o reactivá un paciente antes de agendar.</Alert>}
     <TextField label="Fecha y hora (Argentina)" type="datetime-local" {...register('starts_at')} error={!!errors.starts_at} helperText={errors.starts_at?.message} slotProps={{ inputLabel: { shrink: true } }} />
-    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}><TextField label="Duración (minutos)" {...register('duration')} error={!!errors.duration} helperText={errors.duration?.message} /><TextField label="Honorario (ARS)" {...register('price')} error={!!errors.price} helperText={errors.price?.message} slotProps={{ htmlInput: { inputMode: 'decimal' } }} /></Stack>
-    <TextField select label="Estado de la sesión" {...register('status')} defaultValue={session?.status || 'programada'}>{Object.entries(sessionLabels).map(([value, label]) => <MenuItem key={value} value={value}>{label}</MenuItem>)}</TextField>
-    {fee && <><Alert severity="info">Las cancelaciones y ausencias no generan deuda salvo que registres un cargo explícito.</Alert><TextField label="Cargo excepcional (ARS)" {...register('cancellation_fee')} error={!!errors.cancellation_fee} helperText={errors.cancellation_fee?.message} /><TextField label="Motivo del cargo" {...register('cancellation_reason')} error={!!errors.cancellation_reason} helperText={errors.cancellation_reason?.message} /></>}
+    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}><TextField label="Duración (minutos)" {...register('duration')} error={!!errors.duration} helperText={errors.duration?.message} /><TextField label="Honorario (ARS)" {...register('price')} error={!!errors.price} helperText={errors.price?.message} slotProps={{ input: { readOnly: scope === 'future' }, htmlInput: { inputMode: 'decimal' } }} /></Stack>
+    {scope === 'future' && <Typography variant="caption" color="text.secondary">Los próximos turnos usarán el honorario habitual del paciente.</Typography>}
+    {scope === 'one' && <TextField select label="Estado de la sesión" {...register('status')} defaultValue={session?.status || 'programada'}>{Object.entries(sessionLabels).map(([value, label]) => <MenuItem key={value} value={value}>{label}</MenuItem>)}</TextField>}
+    {scope === 'one' && fee && <><Alert severity="info">Las cancelaciones y ausencias no generan deuda salvo que registres un cargo explícito.</Alert><TextField label="Cargo excepcional (ARS)" {...register('cancellation_fee')} error={!!errors.cancellation_fee} helperText={errors.cancellation_fee?.message} /><TextField label="Motivo del cargo" {...register('cancellation_reason')} error={!!errors.cancellation_reason} helperText={errors.cancellation_reason?.message} /></>}
     {session && cents(session.paid_amount) > 0 && <Alert severity="info">Esta sesión tiene pagos. Para corregir sus datos primero revertí el pago incorrecto.</Alert>}
-  </Stack></DialogContent><DialogActions><Button onClick={close} disabled={mutation.isPending}>Cancelar</Button><Button type="submit" variant="contained" disabled={mutation.isPending || patients.isLoading}>{mutation.isPending ? 'Guardando…' : session ? 'Guardar cambios' : 'Agendar turno'}</Button></DialogActions></Box></Dialog>
+  </Stack></DialogContent><DialogActions><Button onClick={close} disabled={mutation.isPending}>Cancelar</Button><Button type="submit" variant="contained" disabled={mutation.isPending || patients.isLoading || scope === 'future' && (series.isLoading || !!series.error)}>{mutation.isPending ? 'Guardando…' : session ? 'Guardar cambios' : 'Agendar turno'}</Button></DialogActions></Box></Dialog>
 }
 function PaymentForm({ patientId, close, saved }: { patientId?: string; close: () => void; saved: () => void }) {
   const patients = usePatients()

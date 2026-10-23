@@ -23,7 +23,7 @@ export default function Users() {
     cache.setQueryData(adminUsersOptions.queryKey, next); setSelection(null); setNotice(message)
   }
   return <>
-    <PageHeading eyebrow="ADMINISTRACIÓN" title="Usuarios" description="Creá cuentas y decidí quiénes pueden acceder al consultorio." action={<Button variant="contained" startIcon={<AddRounded />} onClick={() => setSelection({ kind: 'create' })}>Nuevo usuario</Button>} />
+    <PageHeading title="Usuarios" action={<Button variant="contained" startIcon={<AddRounded />} onClick={() => setSelection({ kind: 'create' })}>Nuevo usuario</Button>} />
     <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(3,1fr)' }, gap: 2, mb: 3 }}>
       {[{ label: 'Usuarios', value: users.data?.length || 0 }, { label: 'Habilitados', value: users.data?.filter(user => user.active).length || 0 }, { label: 'Bloqueados', value: users.data?.filter(user => !user.active).length || 0 }].map(item => <Card key={item.label} sx={{ p: 2.5 }}><Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>{item.label}</Typography><Typography variant="h5">{item.value}</Typography></Card>)}
     </Box>

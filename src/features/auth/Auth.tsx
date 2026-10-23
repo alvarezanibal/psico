@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
 import { Alert, Box, Button, Card, CircularProgress, Container, Stack, TextField, Typography } from '@mui/material'
-import { LockOutlined, SpaRounded } from '@mui/icons-material'
+import { SpaRounded } from '@mui/icons-material'
 import type { Session } from '@supabase/supabase-js'
 import { useQueryClient } from '@tanstack/react-query'
 import { db } from '../../lib/supabase'
@@ -119,7 +119,7 @@ export function AuthGate({ children, callbackError }: { children: ReactNode; cal
   </AuthFrame>
 }
 function AuthFrame({ children }: { children: ReactNode }) {
-  return <Box sx={{ minHeight: '100dvh', display: 'grid', placeItems: 'center', py: 5 }}><Container maxWidth="xs"><Stack direction="row" spacing={1.3} sx={{ alignItems: 'center', justifyContent: 'center', mb: 4 }}><Box sx={{ bgcolor: 'primary.main', color: 'primary.contrastText', borderRadius: 3, p: 1, display: 'flex' }}><SpaRounded /></Box><Typography variant="h5">consultorio<span style={{ color: '#2563EB' }}>.</span></Typography></Stack><Card sx={{ p: 3.5 }}>{children}</Card><Stack direction="row" sx={{ justifyContent: 'center', gap: .7, mt: 3, color: 'text.secondary' }}><LockOutlined sx={{ fontSize: 14 }} /><Typography variant="caption">Tu espacio privado de gestión</Typography></Stack></Container></Box>
+  return <Box sx={{ minHeight: '100dvh', display: 'grid', placeItems: 'center', py: 5 }}><Container maxWidth="xs"><Stack direction="row" spacing={1.3} sx={{ alignItems: 'center', justifyContent: 'center', mb: 4 }}><Box sx={{ bgcolor: 'primary.main', color: 'primary.contrastText', borderRadius: 3, p: 1, display: 'flex' }}><SpaRounded /></Box><Typography variant="h5">consultorio<span style={{ color: '#2563EB' }}>.</span></Typography></Stack><Card sx={{ p: 3.5 }}>{children}</Card></Container></Box>
 }
 function Login({ initialError }: { initialError: string | null }) {
   const [username, setUsername] = useState('')
@@ -138,7 +138,7 @@ function Login({ initialError }: { initialError: string | null }) {
     } finally { setBusy(false) }
   }
   return <Stack component="form" onSubmit={submit} spacing={2.5}>
-    <Box><Typography variant="h5" sx={{ mb: 1 }}>Qué bueno tenerte acá</Typography><Typography variant="body2" color="text.secondary">Ingresá a tu espacio con tu usuario y contraseña.</Typography></Box>
+    <Typography variant="h5" component="h1">Ingresar</Typography>
     {error && <Alert severity="error">{error}</Alert>}
     {help && <Alert severity="info">Pedile al administrador que restablezca tu contraseña. No se envían correos de recuperación para las cuentas nuevas.</Alert>}
     <TextField label="Usuario" value={username} onChange={e => setUsername(e.target.value)} required autoComplete="username" helperText="Si tu cuenta ya existía, también podés ingresar con tu email habitual." slotProps={{ htmlInput: { maxLength: 254, autoCapitalize: 'none', spellCheck: false } }} />

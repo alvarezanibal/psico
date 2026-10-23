@@ -1,6 +1,6 @@
 # SPEC.md — Gestión de Consultorio Psicológico
 
-**Versión:** 1.4
+**Versión:** 1.6
 **Estado:** Especificación para implementación  
 **Idioma:** Español (Argentina)  
 **Alcance actual:** Usuarios profesionales con datos separados y un administrador dedicado a crear y habilitar/bloquear cuentas. Acceso por usuario y contraseña, sin correo para las cuentas nuevas. Facturación ARCA en una etapa posterior.
@@ -106,6 +106,14 @@ En la ficha mostrar historial de sesiones, pagos y saldo pendiente; agregar comp
 
 ### 5.3. Calendario y sesiones
 
+**Pedido confirmado del 23 de octubre de 2026: regla semanal con excepciones (opción A).**
+- Al crear o editar un paciente, permitir un horario semanal fijo desde una fecha, sin fecha de fin obligatoria; al cerrar la serie o archivar al paciente, detener los futuros turnos conservando el historial.
+- Permitir mover o cancelar una sola ocurrencia y cambiar el horario habitual desde una fecha hacia adelante.
+- Diseñar la serie y sus excepciones para la futura conexión con Apple Calendar: identidad estable de serie y de fecha original, incluso al reprogramar.
+- El usuario eligió una regla semanal con excepciones. Al mover un lunes al martes, el turno del lunes se reemplaza; nunca se muestran ambos por esa misma ocurrencia. Mantener la clave de serie + fecha original aunque el turno cambie de semana.
+- Apple Calendar viene después: la dirección solicitada es aplicación → Apple para ver la agenda. Propuesta inicial: suscripción iCalendar de solo lectura, con enlace privado revocable; sin edición bidireccional ni credenciales Apple. Los cambios no se prometen instantáneos. Ver opciones en IMPLEMENTATION_PLAN_SOL_6_1.md.
+- Mantener la interfaz compacta: títulos funcionales y acciones; sin eslóganes, introducciones decorativas ni pie promocional.
+
 - Vistas de día, semana y mes.
 - Cada turno muestra hora, paciente asociado, duración, estado y estado de cobro.
 - Estados de sesión: `programada`, `realizada`, `cancelada`, `ausente`.
@@ -115,6 +123,8 @@ En la ficha mostrar historial de sesiones, pagos y saldo pendiente; agregar comp
 - Guardar precio de cada sesión independientemente de la tarifa actual del paciente.
 - Cancelaciones y ausencias **no generan deuda por defecto**, salvo una tarifa de cancelación configurada explícitamente.
 - Sesiones futuras **no cuentan como deuda vencida o exigible**.
+
+**Activación de horarios fijos:** aplicar la migración 202610230001_recurring_appointments.sql; instrucciones y límites en docs/recurring-appointments.md. Apple permanece pendiente para el paso siguiente.
 
 **Google Calendar (etapa posterior a la primera entrega):**
 

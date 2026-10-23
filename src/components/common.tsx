@@ -5,9 +5,9 @@ import type { ReactNode } from 'react'
 import { initials, safeError } from '../lib/format'
 import { fullName, paymentLabels, sessionLabels, type Patient, type PracticeSession } from '../lib/types'
 
-export function PageHeading({ eyebrow, title, description, action }: { eyebrow?: string; title: string; description: string; action?: ReactNode }) {
-  return <Stack direction={{ xs: 'column', sm: 'row' }} sx={{ justifyContent: "space-between", gap: 2, alignItems: { sm: 'center' }, mb: 3.5 }} >
-    <Box>{eyebrow && <Typography variant="overline" sx={[{ letterSpacing: '.13em', fontSize: '.65rem' }, { color: "text.secondary" }]} >{eyebrow}</Typography>}<Typography variant="h4" sx={{ mb: .75 }} >{title}</Typography><Typography variant="body2" sx={{ color: "text.secondary" }} >{description}</Typography></Box>{action}
+export function PageHeading({ title, description, action }: { title: string; description?: string; action?: ReactNode }) {
+  return <Stack direction={{ xs: 'column', sm: 'row' }} sx={{ justifyContent: 'space-between', gap: 1.5, alignItems: { sm: 'center' }, mb: 2 }}>
+    <Box><Typography variant="h5" component="h1">{title}</Typography>{description && <Typography variant="body2" sx={{ color: 'text.secondary', mt: .5 }}>{description}</Typography>}</Box>{action}
   </Stack>
 }
 export function EmptyState({ title, description, action }: { title: string; description: string; action?: ReactNode }) {

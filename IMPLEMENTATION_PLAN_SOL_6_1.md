@@ -1,6 +1,6 @@
 # Implementation plan for Sol 6.1
 
-Read this plan with [SPEC.md](SPEC.md), version 1.4. The spec defines the product; this plan defines the implementation order, proposed defaults, and a deliberately small verification budget. The intended implementer is Sol 6.1.
+Read this plan with [SPEC.md](SPEC.md), version 1.6. The spec defines the product; this plan defines the implementation order, proposed defaults, and a deliberately small verification budget. The intended implementer is Sol 6.1.
 
 Reviewed 21 October 2026 and updated with the user's scope clarification. Development of the first release has started; see the progress record before continuing. The local Git repository tracks https://github.com/alvarezanibal/psico.git on main.
 
@@ -162,7 +162,28 @@ For the first release, use only the money and access suites (roughly 8–10 scen
 
 > Read SPEC.md and IMPLEMENTATION_PLAN_SOL_6_1.md, especially the progress record. Continue the first release for one psychologist: debts, payments, and local planning. Do not write or run tests yet; use relevant type checks and a build. Connect/configure Supabase and resolve the recorded live-operation blockers when credentials are available. Keep the progress record and report brief. Defer Google Calendar and ARCA to their later phases.
 
-## 12. Progress record
+## 12. Agenda design confirmed 23 October 2026 — option A
+
+The user wants an indefinite weekly slot per patient, exceptions for individual weeks, and a later Apple Calendar connection. The user chose option A and explicitly requires that moving a Monday to Tuesday removes that Monday occurrence. Option B below is only the deferred alternative, not an implementation task. Prioritize this request before the older Google integration phase; ARCA remains later.
+
+| Option | Storage and operation | Tradeoff |
+|---|---|---|
+| A — recommended: weekly rule + exceptions | Store a stable series ID, patient/owner, local weekday/time, duration, start date and optional end. Compute occurrences for the requested range. Persist individual changes or recorded sessions using series ID + ORIGINAL local occurrence as unique identity. | No background generation; requires combining projected slots and persisted sessions consistently. |
+| B — sessions generated ahead | Keep the same rule/original-occurrence identity and generate a rolling horizon of stored sessions with an idempotent server job. Generate through a distant viewed range as needed. | Fits current session queries but adds a scheduled job, generation monitoring and reconciliation when the series changes. |
+
+Both options must use Buenos Aires wall time, work for multiple professional owners, and preserve existing manual sessions and financial history. Read-only calendar queries must not create sessions or debt. Materialize a projected slot when edited or explicitly marked performed/cancelled/absent, retaining its original identity and a price snapshot; never create debt merely because a scheduled date passed. Include projected slots in Inicio and the local calendar, merge exceptions without duplicates, and check overlaps after applying exceptions. A change to one date must not alter the series or a paid session's financial record. A future series change splits the schedule at the effective date and preserves earlier exceptions/history; past recorded sessions remain unchanged. Archive/stop closes future recurrence without deleting historical sessions; explicitly review already booked exceptions beyond the cutoff.
+
+Prepare the future Apple export as iCalendar: stable UID for the series, RRULE for the weekly rule, EXDATE or a cancelled exception for skipped dates, and RECURRENCE-ID based on the ORIGINAL occurrence plus a new DTSTART for moved dates. Do not export materialized sessions again as independent events. A changed future series must also truncate the old exported rule, preserving identities for already recorded occurrences.
+
+Proposed Apple stage: app → Apple via a live HTTPS subscription, not a one-time .ics download. An Edge Function must serve the same authoritative schedule as the app (including moved/cancelled exceptions) using a high-entropy revocable per-professional token stored as a hash. Reject disabled accounts and revoked tokens; never serve all owners or expose privileged keys. Export only agenda fields, defaulting to initials without balances, clinical data or contact details. Apple controls refresh timing. The user subscribes once from Apple Calendar; no Apple account credentials are required. Two-way editing is a separate scope and is not requested.
+
+References: [Apple subscription setup](https://support.apple.com/en-in/102301), [iCalendar RFC 5545](https://www.rfc-editor.org/rfc/rfc5545).
+
+## 13. Progress record
+
+- 23 October 2026, recurrence: option A implemented with weekly series, optional effective-date changes/stopping, stable original occurrence keys and transactional materialization. One-date edits replace the original even across weeks; Inicio and calendar use the same paginated SQL projection. Existing exact matching future manual bookings attach to a new series without changing their amounts. Added patient schedule controls and one-date/future-series editing. Future-series edits are rejected if they would overlap existing individual recorded occurrences; archive stops projections but preserves individually booked sessions. Frontend/Edge Function type checks and final production build passed. Vite still reports the existing large main bundle. No tests created or run. Activation requires the new migration; no live SQL validation or Apple integration claimed. See docs/recurring-appointments.md.
+
+- 23 October 2026: removed decorative page introductions, sidebar slogans and promotional footer; compacted page headings and simplified login/empty-state titles. Recurrence options and the later Apple subscription design were documented above; the user subsequently selected option A (see the newer entry). No calendar migration or integration was added in the earlier copy-cleanup batch. Verification: frontend/Edge Function type checks and production build passed; Vite still reports a large main bundle. No tests created or run. Changes are local and have not been published in this batch.
 
 - Checks for account administration: frontend/Edge Function type checking and production build passed. No tests created or run. The Supabase admin connection is not available yet, so migration, function deployment and first-admin provisioning remain pending.
 - Account administration implemented: dedicated Users panel, username/password for new accounts, enable/block and password resets. Added private role/account tables, server-only admin RPCs, an authenticated/authorized Edge Function and first-admin setup SQL. Original professional login/data are preserved. Activation requires applying 202610220002_admin_users.sql, deploying admin-users and bootstrapping the admin. No tests created or run.
