@@ -120,14 +120,14 @@ end;
 $$;
 
 create function public.change_patient_schedule(p_patient_id uuid,p_schedule jsonb) returns uuid
-language plpgsql security definer set search_path='' as $
+language plpgsql security definer set search_path='' as $$
 declare v_owner uuid := private.require_access(); v_patient public.patients%rowtype;
 begin
  select * into v_patient from public.patients where id=p_patient_id and owner_id=v_owner for update;
  if not found then raise exception 'Paciente no disponible.'; end if;
  return public.save_patient_schedule(to_jsonb(v_patient),p_patient_id,p_schedule);
 end;
-$;
+$$;
 revoke all on function public.change_patient_schedule(uuid,jsonb) from public,anon;
 grant execute on function public.change_patient_schedule(uuid,jsonb) to authenticated;
 
