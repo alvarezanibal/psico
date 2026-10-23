@@ -1,5 +1,7 @@
 # Implementation plan for Sol 6.1
 
+**Security follow-up (23 October 2026):** use [SECURITY_PLAN_SOL_6_1.md](SECURITY_PLAN_SOL_6_1.md) for the requested security corrections and [the security review](docs/security-review-2026-10-23.md) for evidence. The new document defines implementation work; no security fixes or hosting changes were applied when writing this plan. Existing restrictions on test suites and mandatory MFA remain in force.
+
 Read this plan with [SPEC.md](SPEC.md), version 1.7. The spec defines the product; this plan defines the implementation order, proposed defaults, and a deliberately small verification budget. The intended implementer is Sol 6.1.
 
 Reviewed 21 October 2026 and updated with the user's scope clarification. Development of the first release has started; see the progress record before continuing. The local Git repository tracks https://github.com/alvarezanibal/psico.git on main.
@@ -180,6 +182,8 @@ Apple implementation (activation pending, see docs/apple-calendar.md): app → A
 References: [Apple subscription setup](https://support.apple.com/en-in/102301), [iCalendar RFC 5545](https://www.rfc-editor.org/rfc/rfc5545).
 
 ## 13. Progress record
+
+- 23 October 2026, security review and remediation planning: documented production read-only checks and local review in docs/security-review-2026-10-23.md. Added SECURITY_PLAN_SOL_6_1.md with recovery/session/calendar revocation, HTTP headers, an exclusive origin, deployment order, rollback and a focused acceptance matrix. No application code, production settings or patient data changed. Security implementation and authenticated validation remain pending.
 
 - Apple Calendar web instructions simplified at user request: four short numbered steps per device, iPhone/iPad and Mac tabs, concise copy/link notices and Spanish Apple Support link. UI wording only; no database or integration behavior changes. Type checks and production build passed; no tests created or run.
 
