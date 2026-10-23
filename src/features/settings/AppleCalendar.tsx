@@ -6,6 +6,7 @@ import { Alert, Button, Card, Chip, Dialog, DialogActions, DialogContent, Dialog
 import { useAuth } from '../auth/Auth'
 import { db } from '../../lib/supabase'
 import { safeError } from '../../lib/format'
+import { AppleCalendarInstructions } from './AppleCalendarInstructions'
 
 const statusSchema = z.object({ enabled: z.boolean(), include_names: z.boolean(), updated_at: z.string().nullable() })
 const resultSchema = statusSchema.extend({ token: z.string().regex(/^[a-f0-9]{64}$/).nullable() })
@@ -49,7 +50,7 @@ export function AppleCalendar() {
         const link = new URL('/functions/v1/calendar-feed', import.meta.env.VITE_SUPABASE_URL)
         link.searchParams.set('token', result.token)
         setUrl(link.toString())
-        setNotice({ severity: 'success', text: 'Enlace creado. Agregalo como suscripción en Apple Calendar.' })
+        setNotice({ severity: 'success', text: 'Enlace listo. Copialo y seguí los pasos de abajo.' })
       } else setNotice({ severity: 'success', text: action === 'revoke' ? 'Enlace desactivado.' : 'Preferencia guardada. Apple la recibirá al actualizar la suscripción.' })
       setConfirmation(null)
     } catch (error) {
@@ -59,12 +60,12 @@ export function AppleCalendar() {
     } finally { setBusy(false) }
   }
   async function copy() {
-    try { await navigator.clipboard.writeText(url); setNotice({ severity: 'success', text: 'Enlace copiado.' }) }
+    try { await navigator.clipboard.writeText(url); setNotice({ severity: 'success', text: 'Enlace copiado. Pegalo en Calendario de Apple.' }) }
     catch { setNotice({ severity: 'info', text: 'Seleccioná el enlace y copialo manualmente.' }) }
   }
   const enabled = subscription.data?.enabled === true
   return <Card sx={{ p: 3 }}><Stack spacing={2}>
-    <Stack direction="row" sx={{ gap: 1.5, alignItems: 'center', flexWrap: 'wrap' }}><CalendarMonthOutlined color="primary" /><Typography variant="h6" sx={{ flex: 1 }}>Apple Calendar</Typography>{subscription.data && <Chip size="small" label={enabled ? 'Enlace activo' : 'Sin enlace'} color={enabled ? 'success' : 'default'} variant="outlined" />}</Stack>
+    <Stack direction="row" sx={{ gap: 1.5, alignItems: 'center', flexWrap: 'wrap' }}><CalendarMonthOutlined color="primary" /><Typography variant="h6" sx={{ flex: 1 }}>Apple Calendar</Typography>{subscription.data && <Chip size="small" label={enabled ? 'Enlace creado' : 'Sin enlace'} color={enabled ? 'success' : 'default'} variant="outlined" />}</Stack>
     <Typography variant="body2" color="text.secondary">Solo lectura. Los turnos se editan en esta app; Apple actualiza la suscripción periódicamente.</Typography>
     {subscription.isLoading && <Typography variant="body2" color="text.secondary">Consultando conexión…</Typography>}
     {subscription.error && <Alert severity="error" action={<Button color="inherit" onClick={() => void subscription.refetch()}>Reintentar</Button>}>{message(subscription.error)}</Alert>}
@@ -75,14 +76,14 @@ export function AppleCalendar() {
       {enabled && includeNames !== subscription.data.include_names && <Button sx={{ alignSelf: 'flex-start' }} disabled={busy} onClick={() => void configure('update')}>Guardar preferencia</Button>}
       {url ? <>
         <TextField label="Enlace privado de suscripción" value={url} onFocus={event => event.target.select()} slotProps={{ input: { readOnly: true }, htmlInput: { spellCheck: false, autoComplete: 'off' } }} />
-        <Typography variant="caption" color="text.secondary">Quien tenga este enlace puede leer tu agenda. Solo se muestra al crearlo; podés desactivarlo cuando quieras.</Typography>
+        <Typography variant="caption" color="text.secondary">Con este enlace se puede leer tu agenda. Guardalo en privado.</Typography>
         <Stack direction="row" sx={{ gap: 1, flexWrap: 'wrap' }}><Button startIcon={<ContentCopyOutlined />} onClick={() => void copy()} disabled={busy}>Copiar enlace</Button></Stack>
-      </> : enabled && <Typography variant="body2" color="text.secondary">El enlace solo se muestra al crearlo. Si generás otro, tendrás que reemplazar la suscripción anterior en Apple.</Typography>}
+      </> : enabled && <Typography variant="body2" color="text.secondary">El enlace creado sigue activo. Si necesitás uno nuevo, usá Generar otro enlace y reemplazá la suscripción en Apple.</Typography>}
       <Stack direction="row" sx={{ gap: 1, flexWrap: 'wrap' }}>
         {!enabled ? <Button variant="contained" disabled={busy} onClick={() => void configure('create')}>{busy ? 'Creando…' : 'Crear enlace privado'}</Button> : <><Button disabled={busy} onClick={() => { setNotice(null); setConfirmation('rotate') }}>Generar otro enlace</Button><Button color="error" disabled={busy} onClick={() => { setNotice(null); setConfirmation('revoke') }}>Desactivar enlace</Button></>}
       </Stack>
-      <Typography variant="body2" color="text.secondary">En iPhone: Calendario → Calendarios → Agregar calendario → Agregar calendario de suscripción. Pegá el enlace y elegí iCloud para verlo en tus dispositivos.</Typography>
-      <Button component="a" href="https://support.apple.com/en-us/102301" target="_blank" rel="noopener noreferrer" size="small" sx={{ alignSelf: 'flex-start' }}>Instrucciones para iPhone y Mac</Button>
+      <AppleCalendarInstructions linkVisible={Boolean(url)} linkEnabled={enabled} />
+      <Button component="a" href="https://support.apple.com/es-es/102301" target="_blank" rel="noopener noreferrer" size="small" sx={{ alignSelf: 'flex-start' }}>Ver la guía de Apple en español</Button>
     </>}
   </Stack>
     <Dialog open={confirmation !== null} onClose={busy ? undefined : () => setConfirmation(null)}><DialogTitle>{confirmation === 'rotate' ? 'Reemplazar enlace privado' : 'Desactivar enlace'}</DialogTitle><DialogContent><Typography variant="body2">{confirmation === 'rotate' ? 'El enlace anterior dejará de funcionar. En Apple Calendar, quitá la suscripción anterior y agregá la nueva.' : 'Apple dejará de recibir actualizaciones. Para quitar lo ya descargado, eliminá esa suscripción en Calendario.'}</Typography></DialogContent><DialogActions><Button disabled={busy} onClick={() => setConfirmation(null)}>Cancelar</Button><Button color={confirmation === 'revoke' ? 'error' : 'primary'} variant="contained" disabled={busy} onClick={() => { if (confirmation) void configure(confirmation) }}>{busy ? 'Guardando…' : confirmation === 'rotate' ? 'Crear nuevo enlace' : 'Desactivar'}</Button></DialogActions></Dialog>
