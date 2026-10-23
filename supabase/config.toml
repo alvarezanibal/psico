@@ -22,3 +22,7 @@ verify_enabled = true
 # JWT and administrator authorization are checked inside the handler.
 [functions.admin-users]
 verify_jwt = false
+
+# Read-only access is authorized by a revocable high-entropy subscription token.
+[functions.calendar-feed]
+verify_jwt = false

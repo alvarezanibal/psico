@@ -1,6 +1,6 @@
 # SPEC.md — Gestión de Consultorio Psicológico
 
-**Versión:** 1.6
+**Versión:** 1.7
 **Estado:** Especificación para implementación  
 **Idioma:** Español (Argentina)  
 **Alcance actual:** Usuarios profesionales con datos separados y un administrador dedicado a crear y habilitar/bloquear cuentas. Acceso por usuario y contraseña, sin correo para las cuentas nuevas. Facturación ARCA en una etapa posterior.
@@ -111,7 +111,8 @@ En la ficha mostrar historial de sesiones, pagos y saldo pendiente; agregar comp
 - Permitir mover o cancelar una sola ocurrencia y cambiar el horario habitual desde una fecha hacia adelante.
 - Diseñar la serie y sus excepciones para la futura conexión con Apple Calendar: identidad estable de serie y de fecha original, incluso al reprogramar.
 - El usuario eligió una regla semanal con excepciones. Al mover un lunes al martes, el turno del lunes se reemplaza; nunca se muestran ambos por esa misma ocurrencia. Mantener la clave de serie + fecha original aunque el turno cambie de semana.
-- Apple Calendar viene después: la dirección solicitada es aplicación → Apple para ver la agenda. Propuesta inicial: suscripción iCalendar de solo lectura, con enlace privado revocable; sin edición bidireccional ni credenciales Apple. Los cambios no se prometen instantáneos. Ver opciones en IMPLEMENTATION_PLAN_SOL_6_1.md.
+- Apple Calendar: dirección aplicación → Apple mediante suscripción iCalendar de solo lectura, con enlace privado revocable. Configuración permite crear, reemplazar o desactivar el enlace y elegir iniciales o nombres completos. Sin edición bidireccional ni credenciales Apple. La actualización depende del cliente Apple; no es instantánea. Activación en docs/apple-calendar.md.
+- En Inicio, la agenda del día aparece antes del resumen financiero y carga independientemente de este.
 - Mantener la interfaz compacta: títulos funcionales y acciones; sin eslóganes, introducciones decorativas ni pie promocional.
 
 - Vistas de día, semana y mes.
@@ -124,7 +125,7 @@ En la ficha mostrar historial de sesiones, pagos y saldo pendiente; agregar comp
 - Cancelaciones y ausencias **no generan deuda por defecto**, salvo una tarifa de cancelación configurada explícitamente.
 - Sesiones futuras **no cuentan como deuda vencida o exigible**.
 
-**Activación de horarios fijos:** aplicar la migración 202610230001_recurring_appointments.sql; instrucciones y límites en docs/recurring-appointments.md. Apple permanece pendiente para el paso siguiente.
+**Activación de horarios fijos:** aplicar la migración 202610230001_recurring_appointments.sql; instrucciones y límites en docs/recurring-appointments.md. Apple requiere además 202610230002_calendar_subscription.sql y la función calendar-feed; ver docs/apple-calendar.md.
 
 **Google Calendar (etapa posterior a la primera entrega):**
 

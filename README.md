@@ -74,3 +74,5 @@ Antes de usar datos reales, completá la configuración y las verificaciones de 
 - [Especificación](SPEC.md) y [plan/progreso](IMPLEMENTATION_PLAN_SOL_6_1.md)
 
 El workflow de GitHub Pages se ejecuta manualmente desde Actions después de configurar el repositorio y las variables públicas. No aplica migraciones automáticamente.
+
+Apple Calendar: [activación y suscripción](docs/apple-calendar.md).
